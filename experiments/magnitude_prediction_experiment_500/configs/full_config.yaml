@@ -1,0 +1,145 @@
+compute:
+  gpu:
+    mixed_precision: false
+    use_multi_gpu: false
+  memory:
+    non_blocking: true
+    pin_memory: true
+data:
+  filter_params:
+    source_magnitude_type: ml
+    trace_category: earthquake_local
+  paths:
+    csv_path: F:\STEAD\chunk2\chunk2.csv
+    save_dir: results
+    wave_path: F:\STEAD\chunk2\chunk2.hdf5
+  preprocessing:
+    channels: 3
+    sampling_rate: 100
+    target_length: 1000
+    window_samples: 500
+  sampling_by_magnitude:
+    enable: true
+    samples:
+    - count: 500
+      range:
+      - 0.5
+      - 1.0
+    - count: 500
+      range:
+      - 1.0
+      - 1.5
+    - count: 500
+      range:
+      - 1.5
+      - 2.0
+    - count: 500
+      range:
+      - 2.0
+      - 2.5
+    - count: 500
+      range:
+      - 2.5
+      - 3.0
+    - count: 500
+      range:
+      - 3.0
+      - 3.5
+    - count: 500
+      range:
+      - 3.5
+      - 4.0
+    - count: 500
+      range:
+      - 4.0
+      - 4.5
+  spectrogram:
+    hop_length: 64
+    n_fft: 256
+    power: 2.0
+    win_length: 256
+dataloader:
+  batch_size: 64
+  num_workers: 0
+  pin_memory: true
+  shuffle:
+    test: false
+    train: true
+    val: false
+  split_ratios:
+    test: 0.15
+    train: 0.7
+    val: 0.15
+debug:
+  enable: false
+  fast_run:
+    enable: false
+    max_epochs: 5
+    max_samples_per_class: 50
+evaluation:
+  association_thresholds:
+    acceptable: 0.5
+    excellent: 0.2
+    good: 0.3
+  magnitude_bins:
+  - 2.0
+  - 2.5
+  - 3.0
+  - 3.5
+  - 4.0
+  - 4.5
+  - 5.0
+  visualization:
+    dpi: 300
+    enable: true
+    figure_size:
+    - 12
+    - 8
+    save_plots: true
+experiment:
+  device: cuda
+  name: magnitude_prediction_experiment_500
+  random_seed: 42
+logging:
+  console_output: true
+  enable: true
+  experiment_logger:
+    auto_name: true
+    base_dir: experiments
+    save_config: true
+    save_model: true
+    save_plots: true
+    save_results: true
+  level: INFO
+model:
+  dropout: 0.1
+  hidden_dim: 256
+  input_channels: 3
+training:
+  early_stopping:
+    enable: true
+    min_delta: 0.0001
+    mode: min
+    monitor: val_loss
+    patience: 50
+  gradient_clipping:
+    enable: true
+    max_norm: 1.0
+  learning_rate: 0.0001
+  model_saving:
+    mode: min
+    monitor: val_loss
+    save_best_only: true
+    save_path: checkpoints/best_model.pth
+  num_epochs: 500
+  optimizer:
+    betas:
+    - 0.9
+    - 0.999
+    type: AdamW
+  scheduler:
+    factor: 0.5
+    min_lr: 1.0e-06
+    patience: 15
+    type: ReduceLROnPlateau
+  weight_decay: 0.0001

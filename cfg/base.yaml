@@ -1,0 +1,134 @@
+experiment:
+  name: "magnitude_evaluate_experiment_500_chunk2_long6"
+  random_seed: 42
+  device: "cuda"  # cuda, cpu, auto
+data:
+  paths:
+    csv_path: "F:\\STEAD\\chunk2\\chunk2.csv"
+    wave_path: "F:\\STEAD\\chunk2\\chunk2.hdf5"
+    save_dir: "results"
+  filter_params:
+    trace_category: "earthquake_local"
+    source_magnitude_type: "ml"
+  sampling_by_magnitude:
+    enable: true
+    samples:
+      - range: [0.5, 1.0]
+        count: 500
+      - range: [1.0, 1.5]
+        count: 500
+      - range: [1.5, 2.0]
+        count: 500
+      - range: [2.0, 2.5]
+        count: 500
+      - range: [2.5, 3.0]
+        count: 500
+      - range: [3.0, 3.5]
+        count: 500
+      - range: [3.5, 4.0]
+        count: 500
+      - range: [4.0, 4.5]
+        count: 500
+
+  preprocessing:
+    window_samples: 600
+    target_length: 1000
+    sampling_rate: 100
+    channels: 3
+  spectrogram:
+    n_fft: 256
+    win_length: 256
+    hop_length: 64
+    power: 2.0
+
+dataloader:
+  split_ratios:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+
+  batch_size: 64
+  num_workers: 0
+  pin_memory: true
+  shuffle:
+    train: true
+    val: false
+    test: false
+
+model:
+  input_channels: 3
+  hidden_dim: 256
+  dropout: 0.1
+
+training:
+  num_epochs: 500
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-4
+  scheduler:
+    type: "ReduceLROnPlateau"
+    patience: 15
+    factor: 0.5
+    min_lr: 1.0e-6
+
+  optimizer:
+    type: "AdamW"
+    betas: [0.9, 0.999]
+
+  gradient_clipping:
+    enable: true
+    max_norm: 1.0
+
+  early_stopping:
+    enable: true
+    patience: 50
+    min_delta: 1.0e-4
+    monitor: "val_loss"
+    mode: "min"
+
+  model_saving:
+    save_best_only: true
+    monitor: "val_loss"
+    mode: "min"
+    save_path: "checkpoints/best_model.pth"
+
+evaluation:
+  association_thresholds:
+    excellent: 0.2
+    good: 0.3
+    acceptable: 0.5
+
+  magnitude_bins: [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
+
+  visualization:
+    enable: true
+    save_plots: true
+    figure_size: [12, 8]
+    dpi: 300
+
+logging:
+  enable: true
+  level: "INFO"
+  console_output: true
+
+  experiment_logger:
+    base_dir: "experiments"
+    auto_name: true
+    save_config: true
+    save_model: true
+    save_plots: true
+    save_results: true
+
+compute:
+  gpu:
+    use_multi_gpu: false
+    mixed_precision: false
+  memory:
+    pin_memory: true
+    non_blocking: true
+
+debug:
+  enable: false
+  fast_run:
+    enable: false
+    max_epochs: 5
+    max_samples_per_class: 50
