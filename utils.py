@@ -312,37 +312,3 @@ def plot_training_diagnostics(trainer, save_dir):
     plt.savefig(f"{save_dir}/training_diagnostics.png", dpi=300, bbox_inches='tight')
     plt.close()
 
-
-if __name__ == "__main__":
-    # 测试损失函数
-    print("测试自定义损失函数...")
-
-    # 创建模拟数据
-    predictions = torch.randn(16) + 3.5
-    targets = torch.randn(16) + 3.5
-
-    # 测试不同损失函数
-    mag_loss = MagnitudeLoss()
-    focal_loss = FocalMagnitudeLoss()
-
-    loss1 = mag_loss(predictions, targets)
-    loss2 = focal_loss(predictions, targets)
-
-    print(f"MagnitudeLoss: {loss1.item():.4f}")
-    print(f"FocalMagnitudeLoss: {loss2.item():.4f}")
-
-    # 测试数据增强
-    print("\n测试数据增强...")
-    batch = torch.randn(8, 300, 3)  # 8个样本，300个时间步，3个通道
-
-    aug_params = {
-        'noise_level': 0.1,
-        'time_shift': 10,
-        'amplitude_scale': 1.2,
-        'channel_shuffle': True
-    }
-
-    augmented = create_augmented_batch(batch, aug_params)
-    print(f"原始批次形状: {batch.shape}")
-    print(f"增强批次形状: {augmented.shape}")
-    print(f"增强前后差异: {(augmented - batch).abs().mean().item():.4f}")

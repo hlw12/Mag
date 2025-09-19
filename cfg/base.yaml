@@ -1,11 +1,11 @@
 experiment:
-  name: "magnitude_evaluate_experiment_500_chunk2_long6"
+  name: #"magnitude_evaluate_experiment_500"
   random_seed: 42
   device: "cuda"  # cuda, cpu, auto
 data:
   paths:
-    csv_path: "F:\\STEAD\\chunk2\\chunk2.csv"
-    wave_path: "F:\\STEAD\\chunk2\\chunk2.hdf5"
+    csv_path: #"F:\\STEAD\\chunk2\\chunk2.csv"
+    wave_path: #"F:\\STEAD\\chunk2\\chunk2.hdf5"
     save_dir: "results"
   filter_params:
     trace_category: "earthquake_local"

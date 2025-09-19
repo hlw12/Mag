@@ -155,39 +155,3 @@ class MyDataset(Dataset):
             self.waveSrc.close()
 
 
-if __name__ == "__main__":
-    csv_path = "./STEAD/chunk2.csv"
-    wave_path = "./STEAD/chunk2.hdf5"
-    filter_params = {
-        'trace_category': 'earthquake_local',
-    }
-    sampling_by_magnitude = {
-        (2.0, 2.5): 100,
-        (2.5, 3.0): 100,
-        (3.0, 3.5): 100,
-        (3.5, 4.0): 100,
-        (4, 4.5): 100,
-        (4.5, 5): 100
-    }
-
-    dataset = MyDataset(
-        csvPath=csv_path,
-        wavePath=wave_path,
-        # window_size=1.5,
-        mode='train',
-        filter_params=filter_params,
-        sampling_by_magnitude=sampling_by_magnitude
-    )
-
-    stats = dataset.get_statistics()
-    print(f"Dataset statistics: {stats}")
-    wave_data, magnitude = dataset[0]
-    print(f"Wave data shape: {wave_data.shape}")  # 应该是 (300, 3) 对于3秒@100Hz的3分量数据
-    print(f"Magnitude: {magnitude}")
-    sample_dict = dataset.getAllsample()[0]
-    print(f"Sample dict keys: {sample_dict.keys()}")
-    print(f"Trace name: {sample_dict['trace_name']}")
-    print(f"Trace category: {sample_dict['trace_category']}")
-    print(f"Source distance: {sample_dict['source_distance_km']} km")
-    print(f"P arrival sample: {sample_dict['p_arrival_sample']}")
-    dataset.close()
