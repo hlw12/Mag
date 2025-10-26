@@ -1,6 +1,6 @@
 # Earthquake Magnitude Prediction
 
-A sophisticated deep learning system for predicting earthquake magnitude from seismic waveforms using dual-branch neural networks and advanced signal processing techniques.
+A deep learning system for predicting earthquake magnitude from seismic waveforms using dual-branch neural networks and advanced signal processing techniques.
 
 ##  Abstract
 
