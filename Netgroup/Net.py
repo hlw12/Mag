@@ -85,8 +85,9 @@ class MagnitudeAwarePooling(nn.Module):
         avg_pool = torch.mean(x, dim=1)  # [B, D]
         attn_weights = F.softmax(torch.sum(x ** 2, dim=-1), dim=-1).unsqueeze(-1)  # [B, L, 1]
         attn_pool = torch.sum(x * attn_weights, dim=1)  # [B, D]
-        pool_weights = self.energy_fc(energy)  # [B, 1] -> [B, 3]
-        pool_weights = F.softmax(pool_weights, dim=-1).squeeze()  # [B, 3]
+        energy = torch.mean(x ** 2, dim=(1, 2), keepdim=False).unsqueeze(-1)  # [B, 1]
+        pool_weights = self.energy_fc(energy)  # [B, 3]
+        pool_weights = F.softmax(pool_weights, dim=-1)  # [B, 3] 不需要squeeze
         final_pool = (pool_weights[:, 0:1] *  max_pool+
                       pool_weights[:, 1:2] * avg_pool +
                       pool_weights[:, 2:3] * attn_pool)
@@ -94,9 +95,6 @@ class MagnitudeAwarePooling(nn.Module):
 
 
 class EnhancedTimeBranch(nn.Module):
-    """
-    增强的时域分支
-    """
 
     def __init__(self, in_channels=3, hidden_dim=256, dropout=0.1):
         super().__init__()
@@ -129,9 +127,6 @@ class EnhancedTimeBranch(nn.Module):
 
 
 class EnhancedFreqBranch(nn.Module):
-    """
-    增强的频域分支
-    """
 
     def __init__(self, in_channels=3, dropout=0.1):
         super().__init__()
@@ -245,22 +240,24 @@ class MagnitudeRegressionHead(nn.Module):
         return self.layers(x).squeeze(-1)
 
 
-class AdvancedMagnitudeNet(nn.Module):
-    """
-    高级震级预测网络
-    结合多尺度时域特征、自适应频域注意力和跨模态融合
-    """
+class MP_Net(nn.Module):
 
     def __init__(self, input_channels=3, hidden_dim=256, dropout=0.1):
         super().__init__()
         self.time_branch = EnhancedTimeBranch(input_channels, hidden_dim, dropout)
         self.freq_branch = EnhancedFreqBranch(input_channels, dropout)
+        self.norm_mlp = nn.Sequential(
+            nn.Linear(6, 32),
+            nn.ReLU(),
+            nn.Linear(32, 64),
+            nn.ReLU()
+        )
         time_out_dim = hidden_dim
-        freq_out_dim = 256 * 4 * 4  # 256 channels * 4 * 4 spatial
+        freq_out_dim = 256 * 4 * 4
         self.cross_fusion = CrossModalFusion(time_out_dim, freq_out_dim, fusion_dim=512)
-        self.regression_head = MagnitudeRegressionHead(512 // 2, dropout)
+        self.regression_head = MagnitudeRegressionHead(512 // 2 + 64, dropout)
         self.model_info = {
-            'name': 'MagnitudeNet',
+            'name': 'MP_Net',
             'features': [
                 'Multi-scale temporal convolution',
                 'Adaptive spectral attention',
@@ -271,16 +268,31 @@ class AdvancedMagnitudeNet(nn.Module):
         }
 
     def forward(self, inputs):
-        if isinstance(inputs, tuple) and len(inputs) == 2:
-            wave, spec = inputs
+        if isinstance(inputs, tuple) and len(inputs) == 3:
+            wave, spec, f_peak = inputs
         else:
-            wave, spec = inputs
+            raise ValueError("Expected inputs: (wave, spec, norm_stds)")
         time_feat = self.time_branch(wave)  # [B, hidden_dim]
         freq_feat = self.freq_branch(spec)  # [B, freq_out_dim]
         fused_feat = self.cross_fusion(time_feat, freq_feat)
-        magnitude = self.regression_head(fused_feat)
-
+        norm_feat = self.norm_mlp(f_peak)
+        final_feat = torch.cat([fused_feat, norm_feat], dim=1)
+        magnitude = self.regression_head(final_feat)
         return magnitude
+
+    # def forward(self, inputs):
+    #     if isinstance(inputs, tuple) and len(inputs) == 2:
+    #         wave, spec = inputs
+    #     else:
+    #         raise ValueError("Expected inputs: (wave, spec, norm_stds)")
+    #     time_feat = self.time_branch(wave)  # [B, hidden_dim]
+    #     freq_feat = self.freq_branch(spec)  # [B, freq_out_dim]
+    #     fused_feat = self.cross_fusion(time_feat, freq_feat)
+    #     # norm_feat = self.norm_mlp(f_peak)
+    #     # final_feat = torch.cat([fused_feat, norm_feat], dim=1)
+    #     # magnitude = self.regression_head(final_feat)
+    #     magnitude = self.regression_head(fused_feat)
+    #     return magnitude
 
     def get_model_info(self):
         total_params = sum(p.numel() for p in self.parameters())
@@ -290,10 +302,10 @@ class AdvancedMagnitudeNet(nn.Module):
         info.update({
             'total_parameters': total_params,
             'trainable_parameters': trainable_params,
-            'model_size_mb': total_params * 4 / (1024 * 1024)  # 假设float32
+            'model_size_mb': total_params * 4 / (1024 * 1024)
         })
         return info
 
 def create_magnitude_model(**kwargs):
-    return AdvancedMagnitudeNet(**kwargs)
+    return MP_Net(**kwargs)
 

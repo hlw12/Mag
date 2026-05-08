@@ -42,8 +42,6 @@ class MagnitudeModelConfig:
             raise ValueError("Configuration not loaded, please call load_config() first")
 
         data_config = self.config['data']
-
-        # Build sampling configuration
         sampling_config = {}
         if data_config.get('sampling_by_magnitude', {}).get('enable', True):
             for sample in data_config['sampling_by_magnitude']['samples']:
@@ -53,6 +51,8 @@ class MagnitudeModelConfig:
         return {
             'csv_path': data_config['paths']['csv_path'],
             'wave_path': data_config['paths']['wave_path'],
+            'alternate_csv_path': data_config['paths']['alternate_csv_path'],
+            'alternate_wave_path': data_config['paths']['alternate_wave_path'],
             'filter_params': data_config['filter_params'],
             'sampling_by_magnitude': sampling_config if sampling_config else None,
             'window_samples': data_config['preprocessing']['window_samples'],
@@ -216,24 +216,19 @@ class ConfigLoader:
 
 @dataclass
 class DataConfig:
-    """数据配置数据类"""
     csv_path: str = "data/STEAD/chunk2.csv"
     wave_path: str = "data/STEAD/chunk2.hdf5"
     save_dir: str = "results"
-
-    # 过滤参数
     filter_params: Dict[str, Any] = field(default_factory=lambda: {
         'trace_category': 'earthquake_local',
         'source_magnitude_type': 'ml'
     })
 
-    # 预处理参数
     window_samples: int = 500
     target_length: int = 1000
     sampling_rate: int = 100
     channels: int = 3
 
-    # 频谱参数
     n_fft: int = 256
     win_length: int = 256
     hop_length: int = 64
@@ -329,7 +324,7 @@ def validate_config(config: Dict[str, Any]) -> bool:
 
     csv_path = config['data']['paths']['csv_path']
     wave_path = config['data']['paths']['wave_path']
-
+    print(csv_path)
     if not os.path.exists(csv_path):
         print(f"[WARNING] CSV文件不存在: {csv_path}")
     if not os.path.exists(wave_path):
@@ -374,6 +369,7 @@ def print_config_summary(config: Dict[str, Any]):
 if __name__ == "__main__":
     parser = create_argparser()
     args = parser.parse_args()
+    # print(args.config)
     try:
         config = load_and_merge_config(
             config_path=args.config,

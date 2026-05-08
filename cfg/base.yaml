@@ -1,37 +1,40 @@
 experiment:
-  name: #"magnitude_evaluate_experiment_500"
-  random_seed: 42
+  name: "magnitude_evaluate_experiment"
+  random_seed: 0
   device: "cuda"  # cuda, cpu, auto
 data:
   paths:
-    csv_path: #"F:\\STEAD\\chunk2\\chunk2.csv"
-    wave_path: #"F:\\STEAD\\chunk2\\chunk2.hdf5"
+    csv_path:
+    wave_path:
+    alternate_csv_path:
+    alternate_wave_path:
     save_dir: "results"
   filter_params:
     trace_category: "earthquake_local"
-    source_magnitude_type: "ml"
+    # source_magnitude_type: "ml"
+    # source_distance_km: [20, 200]
   sampling_by_magnitude:
     enable: true
     samples:
       - range: [0.5, 1.0]
-        count: 500
+        count: 300
       - range: [1.0, 1.5]
-        count: 500
+        count: 300
       - range: [1.5, 2.0]
-        count: 500
+        count: 300
       - range: [2.0, 2.5]
-        count: 500
+        count: 300
       - range: [2.5, 3.0]
-        count: 500
+        count: 300
       - range: [3.0, 3.5]
-        count: 500
+        count: 300
       - range: [3.5, 4.0]
-        count: 500
+        count: 300
       - range: [4.0, 4.5]
-        count: 500
+        count: 300
 
   preprocessing:
-    window_samples: 600
+    window_samples: 500
     target_length: 1000
     sampling_rate: 100
     channels: 3
@@ -61,7 +64,7 @@ model:
   dropout: 0.1
 
 training:
-  num_epochs: 500
+  num_epochs: 150
   learning_rate: 1.0e-4
   weight_decay: 1.0e-4
   scheduler:
@@ -80,7 +83,7 @@ training:
 
   early_stopping:
     enable: true
-    patience: 50
+    patience: 15
     min_delta: 1.0e-4
     monitor: "val_loss"
     mode: "min"
